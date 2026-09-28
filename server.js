@@ -2,6 +2,8 @@ const fs = require('node:fs');
 const path = require('node:path');
 const http = require('node:http');
 const { DatabaseSync } = require('node:sqlite');
+const { createOtpService } = require('./otp-service');
+const { createTwilioSender } = require('./sms-service');
 
 const ROOT = __dirname;
 const DEFAULT_HTML = 'ventarch_portal_html (1).html';
@@ -16,7 +18,10 @@ const MIME_TYPES = {
     '.pdf': 'application/pdf'
 };
 
-function createServer({ dbPath = path.join(ROOT, 'data', 'ventarch.sqlite') } = {}) {
+function createServer({
+    dbPath = path.join(ROOT, 'data', 'ventarch.sqlite'),
+    otpService = createOtpService({ sendOtp: createTwilioSender() })
+} = {}) {
     fs.mkdirSync(path.dirname(dbPath), { recursive: true });
     const database = new DatabaseSync(dbPath);
     database.exec(`
@@ -84,6 +89,36 @@ function createServer({ dbPath = path.join(ROOT, 'data', 'ventarch.sqlite') } = 
                 if (request.method === 'GET' && url.pathname.startsWith('/api/users/')) {
                     const phone = decodeURIComponent(url.pathname.slice('/api/users/'.length));
                     return sendJson(200, { user: getUser.get(phone) || null });
+                }
+
+                if (request.method === 'POST' && url.pathname === '/api/otp/request') {
+                    const body = await readJson(request);
+                    const name = typeof body.name === 'string' ? body.name.trim() : '';
+                    const phone = typeof body.phone === 'string' ? body.phone.trim() : '';
+                    if (!name || name.length > 120 || !phone || phone.length > 40) {
+                        return sendJson(400, { error: 'Enter a valid name and mobile number.' });
+                    }
+                    const { expiresAt } = await otpService.request(phone);
+                    return sendJson(202, { message: 'OTP sent.', expiresAt });
+                }
+
+                if (request.method === 'POST' && url.pathname === '/api/otp/verify') {
+                    const body = await readJson(request);
+                    const name = typeof body.name === 'string' ? body.name.trim() : '';
+                    const phone = typeof body.phone === 'string' ? body.phone.trim() : '';
+                    const code = typeof body.code === 'string' ? body.code.trim() : '';
+                    if (!name || name.length > 120 || !phone || phone.length > 40 || !/^\d{6}$/.test(code)) {
+                        return sendJson(400, { error: 'Enter a valid OTP.' });
+                    }
+                    const verification = otpService.verify(phone, code);
+                    if (!verification.valid) return sendJson(401, { error: verification.error });
+
+                    let user = getUser.get(phone);
+                    if (!user) {
+                        insertUser.run(phone, name, QUOTE_LIMIT, new Date().toISOString());
+                        user = getUser.get(phone);
+                    }
+                    return sendJson(200, { user });
                 }
 
                 if (request.method === 'POST' && url.pathname === '/api/users') {
@@ -158,7 +193,8 @@ async function readJson(request) {
 
 if (require.main === module) {
     const port = Number(process.env.PORT) || 3000;
-    const server = createServer();
+    const dbPath = process.env.DB_PATH || path.join(ROOT, 'data', 'ventarch.sqlite');
+    const server = createServer({ dbPath });
     server.listen(port, () => console.log(`VENTARCH portal running at http://localhost:${port}`));
 }
 
