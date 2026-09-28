@@ -1,0 +1,1168 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VENTARCH Partner Portal</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap"
+    rel="stylesheet">
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            slate: {
+              850: '#151e2e',
+              900: '#0f172a',
+              950: '#020617',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <style>
+    body {
+      background-color: #020617;
+      /* slate-950 */
+      color: #cbd5e1;
+      /* slate-300 */
+      -webkit-font-smoothing: antialiased;
+    }
+
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #0f172a;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #475569;
+    }
+
+    @keyframes slideInRight {
+      from {
+        transform: translateX(100%);
+      }
+
+      to {
+        transform: translateX(0);
+      }
+    }
+
+    @keyframes slideOutRight {
+      from {
+        transform: translateX(0);
+      }
+
+      to {
+        transform: translateX(100%);
+      }
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+
+    @keyframes slideUp {
+      from {
+        transform: translateY(100%);
+        opacity: 0;
+      }
+
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    .drawer-open {
+      animation: slideInRight 0.3s ease-out forwards;
+    }
+
+    .drawer-close {
+      animation: slideOutRight 0.3s ease-out forwards;
+    }
+
+    .fade-in {
+      animation: fadeIn 0.2s ease-out forwards;
+    }
+
+    .toast-enter {
+      animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    input[type=number] {
+      -moz-appearance: textfield;
+    }
+  </style>
+</head>
+
+<body class="selection:bg-blue-500/30">
+
+  <div id="login-screen" class="min-h-screen flex flex-col items-center justify-center p-4 fade-in">
+    <div class="w-full max-w-md">
+      <div class="flex items-center gap-3 justify-center mb-8">
+        <div
+          class="w-10 h-10 bg-blue-600 rounded flex items-center justify-center font-bold text-white tracking-tighter text-xl">
+          VA
+        </div>
+        <div>
+          <h1 class="font-bold text-slate-100 text-2xl leading-none tracking-wide">VENTARCH</h1>
+          <span class="text-xs font-mono text-slate-400 uppercase tracking-widest">Partner Portal</span>
+        </div>
+      </div>
+
+      <div class="bg-slate-900 border border-slate-800 rounded-xl p-6 sm:p-8 shadow-2xl">
+        <h2 class="text-xl font-semibold text-slate-100 mb-2">Welcome Back</h2>
+        <p class="text-sm text-slate-400 mb-6">Sign in to access the quoting portal.</p>
+
+        <div id="login-error"
+          class="hidden bg-red-500/10 border border-red-500/20 text-red-400 text-sm p-3 rounded mb-4"></div>
+
+        <!-- Step 1: Details -->
+        <form id="step-1-form" class="space-y-4">
+          <div>
+            <label class="block text-xs font-medium text-slate-400 mb-1.5">Full Name</label>
+            <div class="relative">
+              <i data-lucide="user" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500"></i>
+              <input type="text" id="login-name" required
+                class="w-full bg-slate-950 border border-slate-700 rounded pl-10 pr-3 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-blue-500 transition-colors"
+                placeholder="John Doe">
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-400 mb-1.5">Mobile Number</label>
+            <div class="relative">
+              <i data-lucide="phone" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500"></i>
+              <input type="tel" id="login-phone" required
+                class="w-full bg-slate-950 border border-slate-700 rounded pl-10 pr-3 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-blue-500 transition-colors"
+                placeholder="+91 98765 43210">
+            </div>
+          </div>
+          <button type="submit" id="btn-send-otp"
+            class="w-full bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-medium py-2.5 rounded transition-colors mt-2">
+            Send OTP
+          </button>
+        </form>
+
+        <!-- Step 2: OTP -->
+        <form id="step-2-form" class="space-y-4 hidden">
+          <div class="bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs p-3 rounded mb-4">
+            Demo Mode: An OTP has been simulated. Please enter <strong>123456</strong> to proceed.
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-400 mb-1.5">Enter OTP</label>
+            <div class="relative">
+              <i data-lucide="lock" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500"></i>
+              <input type="text" id="login-otp" required maxlength="6"
+                class="w-full bg-slate-950 border border-slate-700 rounded pl-10 pr-3 py-2.5 tracking-[0.5em] font-mono text-sm text-slate-200 focus:outline-none focus:border-blue-500 transition-colors"
+                placeholder="------">
+            </div>
+          </div>
+          <div class="flex gap-3 mt-2">
+            <button type="button" id="btn-back-login"
+              class="px-4 py-2.5 border border-slate-700 hover:bg-slate-800 rounded text-slate-300 text-sm font-medium transition-colors">
+              Back
+            </button>
+            <button type="submit" id="btn-verify-otp"
+              class="flex-1 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-medium py-2.5 rounded transition-colors">
+              Verify & Login
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div id="main-app" class="hidden min-h-screen flex flex-col">
+    <!-- Header -->
+    <header class="sticky top-0 z-30 bg-slate-900/90 backdrop-blur-md border-b border-slate-800">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div
+            class="w-8 h-8 bg-blue-600 rounded flex items-center justify-center font-bold text-white tracking-tighter">
+            VA</div>
+          <div class="hidden sm:block">
+            <h1 class="font-bold text-slate-100 leading-none tracking-wide">VENTARCH</h1>
+            <span class="text-[10px] font-mono text-slate-400 uppercase tracking-widest">Partner Portal</span>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-4">
+          <div
+            class="hidden md:flex items-center gap-2 bg-slate-950 border border-slate-800 px-3 py-1.5 rounded-full text-xs">
+            <i data-lucide="user" class="w-3.5 h-3.5 text-slate-500"></i>
+            <span id="header-user-name" class="text-slate-300"></span>
+          </div>
+
+          <div
+            class="hidden sm:flex items-center gap-2 bg-slate-950 border border-slate-800 px-3 py-1.5 rounded-full text-xs font-mono">
+            <span class="text-slate-400">Quotes Left:</span>
+            <span id="header-quotes-left" class="text-blue-400 font-bold">10</span>
+          </div>
+
+          <div class="h-6 w-px bg-slate-800 mx-1 hidden sm:block"></div>
+
+          <button id="btn-open-cart"
+            class="relative p-2 text-slate-300 hover:text-white transition-colors bg-slate-800 hover:bg-slate-700 rounded-full"
+            title="Quote Builder">
+            <i data-lucide="shopping-cart" class="w-5 h-5"></i>
+            <span id="cart-badge"
+              class="hidden absolute -top-1 -right-1 bg-blue-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">0</span>
+          </button>
+
+          <button id="btn-logout"
+            class="p-2 text-slate-400 hover:text-red-400 transition-colors rounded-full hover:bg-slate-800"
+            title="Sign Out">
+            <i data-lucide="log-out" class="w-5 h-5"></i>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Catalog -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-8">
+      <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+        <div>
+          <h2 class="text-2xl font-bold text-slate-100 mb-2">Architectural Components</h2>
+          <p class="text-slate-400 text-sm">Select components to build your quotation. Prices are weight-based.</p>
+        </div>
+        <div class="bg-slate-900 border border-slate-800 px-4 py-2 rounded text-right">
+          <div class="text-[10px] font-mono text-slate-500 uppercase tracking-wider mb-1">Current Aluminum Rate</div>
+          <div class="text-blue-400 font-mono font-bold" id="aluminum-rate-display">₹320.00 / kg</div>
+        </div>
+      </div>
+
+      <div id="category-filters" class="flex flex-wrap gap-2 mb-8"></div>
+
+      <div id="product-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <!-- Products injected via JS -->
+      </div>
+    </main>
+  </div>
+
+  <div id="cart-overlay"
+    class="hidden fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-40 transition-opacity opacity-0"></div>
+
+  <div id="cart-drawer"
+    class="fixed top-0 right-0 h-full w-full sm:w-96 bg-slate-900 border-l border-slate-800 z-50 transform translate-x-full flex flex-col transition-transform duration-300 ease-in-out">
+    <div class="flex items-center justify-between p-4 border-b border-slate-800">
+      <h2 class="text-lg font-semibold text-slate-100 flex items-center gap-2">
+        <i data-lucide="shopping-cart" class="w-5 h-5 text-blue-500"></i>
+        Current Quote
+      </h2>
+      <button id="btn-close-cart" class="text-slate-400 hover:text-slate-100 p-1">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+    </div>
+
+    <!-- Empty State -->
+    <div id="cart-empty" class="flex-1 flex flex-col items-center justify-center text-slate-500 space-y-3">
+      <i data-lucide="package" class="w-12 h-12 opacity-20"></i>
+      <p class="text-sm">Your quote builder is empty.</p>
+    </div>
+
+    <!-- Filled State -->
+    <div id="cart-items" class="hidden flex-1 overflow-y-auto p-4 space-y-4">
+      <!-- Cart items injected via JS -->
+    </div>
+
+    <!-- Footer -->
+    <div id="cart-footer" class="hidden p-4 border-t border-slate-800 bg-slate-900/50 space-y-4">
+      <div class="space-y-2 text-sm font-mono">
+        <div class="flex justify-between text-slate-400">
+          <span>Material Subtotal</span>
+          <span id="cart-subtotal">TBD</span>
+        </div>
+        <div class="flex justify-between text-slate-400">
+          <span>Finish Surcharges</span>
+          <span id="cart-surcharge">TBD</span>
+        </div>
+        <div class="flex justify-between text-blue-400 font-bold text-base pt-2 border-t border-slate-800">
+          <span>Total Estimate</span>
+          <span id="cart-total">TBD</span>
+        </div>
+      </div>
+
+      <div class="bg-slate-950 border border-slate-800 rounded p-3 flex justify-between items-center text-sm">
+        <span class="text-slate-400">Quotes Remaining</span>
+        <span id="cart-quotes-status" class="font-mono font-bold text-blue-400">10 / 10</span>
+      </div>
+
+      <div id="quote-limit-warning"
+        class="hidden bg-red-500/10 border border-red-500/20 text-red-400 text-xs p-3 rounded flex items-start gap-2">
+        <i data-lucide="alert-triangle" class="w-4 h-4 shrink-0"></i>
+        <p>You have reached your limit of 10 quotes. Please contact administration.</p>
+      </div>
+
+      <p class="text-[11px] text-slate-500 text-center px-2">
+        Generating this quotation will consume 1 credit. A copy will be sent to the marketing team for review.
+      </p>
+
+      <button id="btn-generate-quote"
+        class="w-full bg-blue-600 hover:bg-blue-500 disabled:bg-slate-800 disabled:text-slate-500 text-white font-medium py-3 rounded transition-colors flex items-center justify-center gap-2">
+        Submit to Marketing <i data-lucide="chevron-right" class="w-4 h-4"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Invoice Modal -->
+  <div id="invoice-modal"
+    class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-[60] flex items-center justify-center p-4 fade-in">
+    <div
+      class="bg-slate-900 border border-slate-700 rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden">
+      <div class="p-5 border-b border-slate-800 flex justify-between items-center bg-slate-850">
+        <h2 class="text-xl font-bold text-white flex items-center gap-2">
+          <i data-lucide="file-text" class="w-5 h-5 text-blue-500"></i> Final Quotation Bill
+        </h2>
+        <button id="btn-close-invoice" class="text-slate-400 hover:text-white transition-colors">
+          <i data-lucide="x" class="w-6 h-6"></i>
+        </button>
+      </div>
+
+      <div class="p-6 overflow-y-auto flex-1 space-y-6">
+        <div class="flex justify-between items-start">
+          <div>
+            <p class="text-sm text-slate-400">Generated for:</p>
+            <p class="font-bold text-slate-200 text-lg" id="invoice-user-name"></p>
+            <p class="text-sm text-slate-400" id="invoice-user-phone"></p>
+          </div>
+          <div class="text-right">
+            <p class="text-sm text-slate-400">Date:</p>
+            <p class="font-mono text-slate-200 text-sm" id="invoice-date"></p>
+          </div>
+        </div>
+
+        <div class="border border-slate-800 rounded-lg overflow-x-auto">
+          <table class="w-full text-left text-sm whitespace-nowrap">
+            <thead class="bg-slate-950 border-b border-slate-800 text-slate-400 uppercase tracking-wider text-xs">
+              <tr>
+                <th class="px-4 py-3">Product</th>
+                <th class="px-4 py-3">SKU</th>
+                <th class="px-4 py-3">Finish</th>
+                <th class="px-4 py-3 text-right">Qty</th>
+                <th class="px-4 py-3 text-right">Unit Price</th>
+                <th class="px-4 py-3 text-right">Total</th>
+              </tr>
+            </thead>
+            <tbody id="invoice-items" class="divide-y divide-slate-800 bg-slate-900">
+              <!-- Invoice items injected here -->
+            </tbody>
+          </table>
+        </div>
+
+        <div class="flex justify-end pt-4">
+          <div class="bg-slate-950 p-4 rounded-lg border border-slate-800 w-64">
+            <p class="text-sm text-slate-400 mb-1">Total Estimated Value</p>
+            <p class="text-2xl font-bold text-blue-400 font-mono" id="invoice-final-total"></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="p-4 border-t border-slate-800 bg-slate-950 flex items-center justify-between">
+        <p class="text-xs text-slate-500">This quotation has been successfully sent to the marketing team database.</p>
+        <div class="flex items-center gap-2">
+          <button id="btn-download-invoice"
+            class="border border-slate-700 hover:bg-slate-800 text-slate-200 px-4 py-2 rounded font-medium transition-colors flex items-center gap-2">
+            <i data-lucide="download" class="w-4 h-4"></i> Download PDF
+          </button>
+          <button id="btn-done-invoice"
+            class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2 rounded font-medium transition-colors">
+            Done
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2"></div>
+
+  <script>
+    // --- Constants & Config ---
+    const QUOTE_LIMIT = 10;
+    const BASE_ALUMINUM_PRICE = 320.00; // INR per kg
+
+    const PAINT_STD = [
+      { name: "Mill Finish", surchargePerKg: 0 },
+      { name: "Powder Coated", surchargePerKg: 45 }
+    ];
+
+    const PRODUCTS = [
+      { id: "p-914028", sku: "914028", name: "Frame", category: "40mm Casement", description: "40mm casement frame. Depth 40mm, glass 5–28mm.", weightKg: 0.547, paintOptions: PAINT_STD, image: "images/Screenshot 2026-09-25 163518.png" },
+      { id: "p-914890", sku: "914890", name: "Inside / Outside Shutter", category: "40mm Casement", description: "Inside/outside shutter for 40mm casement.", weightKg: 0.660, paintOptions: PAINT_STD, image: "images/Screenshot 2026-09-25 163523.png" },
+      { id: "p-819006", sku: "819006", name: "Mullion", category: "40mm Casement", description: "Mullion for 40mm casement windows.", weightKg: 0.715, paintOptions: PAINT_STD, image: "images/Screenshot 2026-09-25 163529.png" },
+      { id: "p-819014", sku: "819014", name: "Inversion", category: "40mm Casement", description: "Inversion section for 40mm casement.", weightKg: 0.433, paintOptions: PAINT_STD, image: "images/Screenshot 2026-09-25 163536.png" },
+      { id: "p-819002", sku: "819002", name: "Flying Mullion", category: "40mm Casement", description: "Flying/fling mullion for 40mm casement windows and doors.", weightKg: 0.862, paintOptions: PAINT_STD, image: "images/Screenshot 2026-09-25 163540.png" },
+      { id: "p-914891", sku: "914891", name: "Big Shutter", category: "40mm Casement", description: "Big shutter for 40mm casement windows.", weightKg: 0.755, paintOptions: PAINT_STD, image: "images/Screenshot 2026-09-25 163549.png" },
+      { id: "p-914030", sku: "914030", name: "SGU Clip (upto 8mm)", category: "Clips", description: "Single glazing clip for 40mm casement, up to 8mm glass.", weightKg: 0.210, paintOptions: [], image: "images/Screenshot 2026-09-25 163559.png" },
+      { id: "p-817091", sku: "817091", name: "SGU Clip (upto 5mm)", category: "Clips", description: "Single glazing clip for 40mm casement, up to 5mm glass.", weightKg: 0.213, paintOptions: [], image: "images/Screenshot 2026-09-25 163602.png" },
+      { id: "p-817050", sku: "817050", name: "DGU Clip (upto 21mm)", category: "Clips", description: "Double glazing clip for 40mm casement, up to 21mm glass.", weightKg: 0.187, paintOptions: [], image: "images/Screenshot 2026-09-25 163605.png" },
+      { id: "p-817921", sku: "817921", name: "DGU Clip (upto 26mm)", category: "Clips", description: "Double glazing clip for 40mm casement, up to 26mm glass.", weightKg: 0.159, paintOptions: [], image: "images/Screenshot 2026-09-25 163607.png" },
+      { id: "p-914351", sku: "914351", name: "Frame", category: "50mm Casement", description: "50mm casement frame. Depth 50mm, glass 5–38mm.", weightKg: 0.818, paintOptions: PAINT_STD, image: "images/Screenshot 2026-09-25 163640.png" },
+      { id: "p-914756", sku: "914756", name: "Big Frame", category: "50mm Casement", description: "Big frame for 50mm casement windows.", weightKg: 1.185, paintOptions: PAINT_STD, image: "images/Screenshot 2026-09-25 163643.png" },
+      { id: "p-914353", sku: "914353", name: "Outside Op. Shutter", category: "50mm Casement", description: "Outside openable shutter for 50mm casement.", weightKg: 1.138, paintOptions: PAINT_STD, image: "images/Screenshot 2026-09-25 163648.png" },
+      { id: "p-914352", sku: "914352", name: "Mullion", category: "50mm Casement", description: "Mullion for 50mm casement windows.", weightKg: 1.015, paintOptions: PAINT_STD, image: "images/Screenshot 2026-09-25 163652.png" },
+      { id: "p-914797", sku: "914797", name: "Flying Mullion", category: "50mm Casement", description: "Flying mullion for 50mm casement windows and doors.", weightKg: 0.707, paintOptions: PAINT_STD, image: "images/Screenshot 2026-09-25 163655.png" },
+      { id: "p-914564", sku: "914564", name: "Inversion", category: "50mm Casement", description: "Inversion section for 50mm casement.", weightKg: 0.508, paintOptions: PAINT_STD, image: "images/Screenshot 2026-09-25 163659.png" },
+      { id: "p-914549", sku: "914549", name: "SGU Clip", category: "Clips", description: "Single glazing clip for 50mm casement.", weightKg: 0.305, paintOptions: [], image: "images/Screenshot 2026-09-25 163704.png" },
+      { id: "p-914641", sku: "914641", name: "DGU Clip", category: "Clips", description: "Double glazing clip for 50mm casement.", weightKg: 0.230, paintOptions: [], image: "images/Screenshot 2026-09-25 163707.png" },
+      { id: "p-992095", sku: "992095", name: "Laminated Glass Clip", category: "Clips", description: "Laminated glass clip for 50mm casement.", weightKg: 0.288, paintOptions: [], image: "images/Screenshot 2026-09-25 163710.png" },
+      { id: "p-992036", sku: "992036", name: "DGU Clip (upto 33mm)", category: "Clips", description: "Double glazing clip for 50mm casement, up to 33mm glass.", weightKg: 0.193, paintOptions: [], image: "images/Screenshot 2026-09-25 163713.png" },
+      { id: "p-914868", sku: "914868", name: "DGU Clip (upto 38mm)", category: "Clips", description: "Double glazing clip for 50mm casement, up to 38mm glass.", weightKg: 0.185, paintOptions: [], image: "images/Screenshot 2026-09-25 163715.png" },
+      { id: "p-819022", sku: "819022", name: "Door Frame", category: "40mm Casement Door", description: "Frame depth 40mm. Glass 5–28mm. Openable sight line 104.4mm.", weightKg: 0.783, paintOptions: PAINT_STD, image: "images/819022.png" },
+      { id: "p-812659", sku: "812659", name: "Door Bottom", category: "40mm Casement Door", description: "Door bottom section for 40mm casement door.", weightKg: 1.298, paintOptions: PAINT_STD, image: "images/Screenshot 2026-09-25 163724.png" },
+      { id: "p-817918", sku: "817918", name: "Door Bottom Adaptor", category: "40mm Casement Door", description: "Door-bottom adaptor for 40mm casement door.", weightKg: 0.305, paintOptions: PAINT_STD, image: "images/Screenshot 2026-09-25 163727.png" },
+      { id: "p-819013", sku: "819013", name: "Big Shutter", category: "40mm Casement Door", description: "Big shutter for 40mm casement door.", weightKg: 0.867, paintOptions: PAINT_STD, image: "images/Screenshot 2026-09-25 163730.png" },
+      { id: "p-819021", sku: "819021", name: "Z Mullion Shutter", category: "40mm Casement Door", description: "Z mullion shutter for 40mm casement door.", weightKg: 0.870, paintOptions: PAINT_STD, image: "images/Screenshot 2026-09-25 163732.png" },
+      { id: "p-819008", sku: "819008", name: "Mullion", category: "40mm Casement Door", description: "Mullion for 40mm casement door.", weightKg: 0.905, paintOptions: PAINT_STD, image: "images/Screenshot 2026-09-25 163742.png" },
+      { id: "p-914774", sku: "914774", name: "Mullion", category: "50mm Casement Door", description: "Mullion for 50mm casement door.", weightKg: 1.235, paintOptions: PAINT_STD, image: "images/Screenshot 2026-09-25 163756.png" },
+      { id: "p-914775", sku: "914775", name: "Frame", category: "50mm Casement Door", description: "Frame for 50mm casement door. Glass 5–38mm.", weightKg: 1.080, paintOptions: PAINT_STD, image: "images/Screenshot 2026-09-25 163759.png" },
+      { id: "p-992214", sku: "992214", name: "Outside Op. Shutter (Multi Point)", category: "50mm Casement Door", description: "Outside openable shutter with multi-point locking.", weightKg: 1.402, paintOptions: PAINT_STD, image: "images/Screenshot 2026-09-25 163802.png" },
+      { id: "p-992109", sku: "992109", name: "Inside Op. Shutter", category: "50mm Casement Door", description: "Inside openable shutter for 50mm casement door.", weightKg: 1.540, paintOptions: PAINT_STD, image: "images/992109.png" },
+      { id: "p-914776", sku: "914776", name: "Outside Op. Shutter (Single Point)", category: "50mm Casement Door", description: "Outside openable shutter with single-point locking.", weightKg: 1.292, paintOptions: PAINT_STD, image: "images/Screenshot 2026-09-25 163814.png" },
+      { id: "p-992208", sku: "992208", name: "Door Bottom Adaptor", category: "50mm Casement Door", description: "Door bottom adaptor for 50mm casement door.", weightKg: 0.526, paintOptions: PAINT_STD, image: "images/Screenshot 2026-09-25 163818.png" },
+      { id: "p-914777", sku: "914777", name: "Door Bottom", category: "50mm Casement Door", description: "Door bottom section for 50mm casement door.", weightKg: 1.766, paintOptions: PAINT_STD, image: "images/Screenshot 2026-09-25 163823.png" }
+    ];
+
+    // --- State Variables ---
+    let currentUser = null;
+    let cart = [];
+    let currentInvoice = null;
+    let quotesRemaining = QUOTE_LIMIT;
+    let tempLoginData = {};
+    let activeCategory = "All";
+
+    // --- Helper Functions ---
+    const formatINR = (amount) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 2 }).format(amount);
+    const formatPDFAmount = (amount) => `INR ${Number(amount).toFixed(2)}`;
+    const getBasePrice = (weight) => weight * BASE_ALUMINUM_PRICE;
+    const getSurcharge = (weight, perKg) => weight * (perKg || 0);
+    const generateId = () => Math.random().toString(36).substr(2, 9);
+
+    const $ = (id) => document.getElementById(id);
+
+    async function apiRequest(path, options = {}) {
+      const response = await fetch(`/api${path}`, {
+        ...options,
+        headers: { 'Content-Type': 'application/json', ...options.headers }
+      });
+      const body = await response.text();
+      let result;
+      try {
+        result = body ? JSON.parse(body) : {};
+      } catch (error) {
+        console.error('Invalid API response:', response.status, body, error);
+        if (response.status === 405) {
+          throw new Error('This page is using a static preview that cannot save users. Run `npm start` and open http://localhost:3000 to use the database.');
+        }
+        throw new Error(`The server returned an invalid response (HTTP ${response.status}). Please restart the portal and try again.`);
+      }
+      if (!body) {
+        if (response.status === 405) {
+          throw new Error('This page is using a static preview that cannot save users. Run `npm start` and open http://localhost:3000 to use the database.');
+        }
+        throw new Error(`The server returned an empty response (HTTP ${response.status}). Please restart the portal and try again.`);
+      }
+      if (!response.ok) throw new Error(result.error || 'Database request failed.');
+      return result;
+    }
+
+    function showToast(message) {
+      const container = $('toast-container');
+      const toast = document.createElement('div');
+      toast.className = 'bg-slate-800 border border-slate-700 text-slate-200 px-4 py-3 rounded shadow-xl flex items-center gap-3 toast-enter';
+      toast.innerHTML = `
+        <div class="bg-blue-500/20 text-blue-400 p-1 rounded-full flex shrink-0">
+          <i data-lucide="check" class="w-4 h-4"></i>
+        </div>
+        <p class="text-sm font-medium">${message}</p>
+      `;
+      container.appendChild(toast);
+      lucide.createIcons({ root: toast });
+
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(100%)';
+        toast.style.transition = 'all 0.3s ease';
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+
+    // --- Initialization ---
+    async function init() {
+      const savedUser = localStorage.getItem('ventarch_active_user_phone');
+
+      if (savedUser) {
+        try {
+          const result = await apiRequest(`/users/${encodeURIComponent(savedUser)}`);
+          if (result.user) {
+            currentUser = result.user;
+            quotesRemaining = currentUser.quotesRemaining;
+            showMainApp();
+          } else {
+            $('login-screen').classList.remove('hidden');
+          }
+        } catch (e) {
+          console.error("Database connection failed.", e);
+          $('login-screen').classList.remove('hidden');
+        }
+      } else {
+        $('login-screen').classList.remove('hidden');
+      }
+
+      setupEventListeners();
+      renderCategoryFilters();
+      renderProducts();
+      lucide.createIcons();
+    }
+
+    // --- STREAMING_CHUNK: Event Listeners Setup ---
+    function setupEventListeners() {
+      // Login Flow
+      $('step-1-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const name = $('login-name').value.trim();
+        const phone = $('login-phone').value.trim();
+        if (!name || !phone) {
+          showLoginError('Please enter both name and mobile number.');
+          return;
+        }
+        tempLoginData = { name, phone };
+        $('login-error').classList.add('hidden');
+
+        const btn = $('btn-send-otp');
+        btn.disabled = true;
+        btn.innerText = 'Sending...';
+        setTimeout(() => {
+          btn.disabled = false;
+          btn.innerText = 'Send OTP';
+          $('step-1-form').classList.add('hidden'); $('step-2-form').classList.remove('hidden');
+        }, 600);
+      });
+
+      $('step-2-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const otp = $('login-otp').value.trim();
+        if (otp !== '123456') {
+          showLoginError('Invalid OTP. For demo, use 123456.');
+          return;
+        }
+
+        const btn = $('btn-verify-otp');
+        btn.disabled = true;
+        btn.innerText = 'Verifying...';
+
+        try {
+          const result = await apiRequest('/users', {
+            method: 'POST',
+            body: JSON.stringify(tempLoginData)
+          });
+          currentUser = result.user;
+          quotesRemaining = currentUser.quotesRemaining;
+
+          localStorage.setItem('ventarch_active_user_phone', currentUser.phone);
+
+          btn.disabled = false;
+          btn.innerText = 'Verify & Login';
+          showMainApp();
+          showToast(`Welcome, ${currentUser.name}!`);
+        } catch (error) {
+          console.error("Login Error:", error);
+          showLoginError(error.message || 'Database connection error.');
+          btn.disabled = false;
+          btn.innerText = 'Verify & Login';
+        }
+      });
+
+      $('btn-back-login').addEventListener('click', () => {
+        $('step-2-form').classList.add('hidden');
+        $('step-1-form').classList.remove('hidden'); $('login-error').classList.add('hidden');
+      });
+
+      // App Actions
+      $('btn-logout').addEventListener('click', () => {
+        currentUser = null;
+        cart = [];
+        localStorage.removeItem('ventarch_active_user_phone');
+        $('main-app').classList.add('hidden');
+        $('login-screen').classList.remove('hidden'); $('step-2-form').classList.add('hidden');
+        $('step-1-form').classList.remove('hidden'); $('login-name').value = '';
+        $('login-phone').value = ''; $('login-otp').value = '';
+      });
+
+      // Cart Drawer Actions
+      $('btn-open-cart').addEventListener('click', openCart);
+      $('btn-close-cart').addEventListener('click', closeCart); $('cart-overlay').addEventListener('click', closeCart);
+
+      // Invoice Modal Actions
+      function closeInvoice() {
+        $('invoice-modal').classList.add('hidden');
+      }
+      $('btn-close-invoice').addEventListener('click', closeInvoice);
+      $('btn-done-invoice').addEventListener('click', closeInvoice);
+      $('btn-download-invoice').addEventListener('click', async () => {
+        const downloadButton = $('btn-download-invoice');
+        downloadButton.disabled = true;
+        try {
+          await downloadInvoicePdf();
+        } catch (error) {
+          console.error('Quotation PDF error:', error);
+          showToast('Could not create the quotation PDF. Please try again.');
+        } finally {
+          downloadButton.disabled = false;
+        }
+      });
+      $('btn-generate-quote').addEventListener('click', async () => {
+        if (quotesRemaining <= 0 || cart.length === 0) return;
+
+        const btn = $('btn-generate-quote');
+        btn.disabled = true;
+        btn.innerHTML = `Saving...`;
+
+        const finalPrice = cart.reduce((sum, item) => sum + ((item.basePrice + item.surcharge) * item.qty), 0);
+
+        try {
+          const quoteData = {
+            userPhone: currentUser.phone,
+            totalEstimate: finalPrice,
+            items: cart
+          };
+
+          const result = await apiRequest('/quotes', {
+            method: 'POST',
+            body: JSON.stringify(quoteData)
+          });
+          quotesRemaining = result.user.quotesRemaining;
+
+          // 3. Show Invoice Modal
+          const invoiceDate = new Date();
+          currentInvoice = {
+            quoteId: result.quoteId,
+            userName: currentUser.name,
+            userPhone: currentUser.phone || 'N/A',
+            date: invoiceDate,
+            items: cart.map(item => ({
+              ...item,
+              image: PRODUCTS.find(product => product.id === item.productId)?.image || null
+            })),
+            total: finalPrice
+          };
+          $('invoice-user-name').innerText = currentUser.name;
+          $('invoice-user-phone').innerText = currentUser.phone || 'N/A';
+          $('invoice-date').innerText = invoiceDate.toLocaleDateString(); $('invoice-final-total').innerText = formatINR(finalPrice);
+
+          const tbody = $('invoice-items');
+          tbody.innerHTML = '';
+
+          cart.forEach(item => {
+            const product = PRODUCTS.find(p => p.id === item.productId);
+            const itemPrice = item.basePrice + item.surcharge;
+            const rowTotal = itemPrice * item.qty;
+
+            const imageHtml = product && product.image
+              ? `<img src="${encodeURI(product.image)}" alt="${item.name}" class="w-10 h-10 object-contain bg-white rounded p-1 border border-slate-700">`
+              : `<div class="w-10 h-10 bg-slate-800 rounded flex items-center justify-center border border-slate-700"><i data-lucide="package" class="w-5 h-5 text-slate-500"></i></div>`;
+
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+              <td class="px-4 py-3 flex items-center gap-3">
+                ${imageHtml}
+                <span class="font-medium text-slate-200">${item.name}</span>
+              </td>
+              <td class="px-4 py-3 font-mono text-xs text-slate-400">${item.sku}</td>
+              <td class="px-4 py-3 text-xs text-slate-400">${item.colorName || 'Default'}</td>
+              <td class="px-4 py-3 text-right font-mono text-slate-200">${item.qty}</td>
+              <td class="px-4 py-3 text-right font-mono text-slate-400">${formatINR(itemPrice)}</td>
+              <td class="px-4 py-3 text-right font-mono font-bold text-slate-200">${formatINR(rowTotal)}</td>
+            `;
+            tbody.appendChild(tr);
+          });
+
+          $('invoice-modal').classList.remove('hidden');
+          lucide.createIcons({ root: $('invoice-modal') });
+
+          // Clear Cart
+          cart = [];
+          updateCartUI();
+          closeCart();
+
+          showToast(`Quotation saved securely to the database!`);
+          updateHeaderUI();
+
+        } catch (error) {
+          console.error("Database Write Error:", error);
+          showToast(error.message || "Failed to save to database.");
+        } finally {
+          btn.disabled = false;
+          btn.innerHTML = `Submit to Marketing <i data-lucide="chevron-right" class="w-4 h-4"></i>`;
+          lucide.createIcons({ root: btn });
+        }
+      });
+    }
+
+    function loadPdfImage(source) {
+      if (!source) return Promise.resolve(null);
+      return new Promise(resolve => {
+        const image = new Image();
+        image.onload = () => {
+          const canvas = document.createElement('canvas');
+          canvas.width = image.naturalWidth;
+          canvas.height = image.naturalHeight;
+          const context = canvas.getContext('2d');
+          context.fillStyle = '#ffffff';
+          context.fillRect(0, 0, canvas.width, canvas.height);
+          context.drawImage(image, 0, 0);
+          resolve(canvas.toDataURL('image/png'));
+        };
+        image.onerror = () => resolve(null);
+        image.src = encodeURI(source);
+      });
+    }
+
+    async function downloadInvoicePdf() {
+      const JsPDF = window.jspdf && window.jspdf.jsPDF;
+      if (!JsPDF || !currentInvoice) {
+        showToast('The quotation PDF is not ready. Please try again.');
+        return;
+      }
+
+      const images = await Promise.all(currentInvoice.items.map(item => loadPdfImage(item.image)));
+      const pdf = new JsPDF({ unit: 'pt', format: 'a4' });
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const margin = 40;
+      const columns = [
+        { label: 'PRODUCT', width: 140, value: item => item.name, align: 'left' },
+        { label: 'SKU', width: 60, value: item => item.sku, align: 'left' },
+        { label: 'FINISH', width: 90, value: item => item.colorName || 'Default', align: 'left' },
+        { label: 'QTY', width: 35, value: item => String(item.qty), align: 'right' },
+        { label: 'UNIT PRICE', width: 90, value: item => formatPDFAmount(item.basePrice + item.surcharge), align: 'right' },
+        { label: 'TOTAL', width: 100, value: item => formatPDFAmount((item.basePrice + item.surcharge) * item.qty), align: 'right' }
+      ];
+      const tableWidth = columns.reduce((sum, column) => sum + column.width, 0);
+
+      const drawTableHeader = y => {
+        pdf.setFillColor(30, 64, 112);
+        pdf.rect(margin, y, tableWidth, 24, 'F');
+        pdf.setFont('helvetica', 'bold');
+        pdf.setFontSize(8);
+        pdf.setTextColor(255, 255, 255);
+        let x = margin;
+        columns.forEach(column => {
+          const textX = column.align === 'right' ? x + column.width - 7 : x + 7;
+          pdf.text(column.label, textX, y + 15, { align: column.align });
+          x += column.width;
+        });
+        return y + 24;
+      };
+
+      pdf.setFillColor(15, 23, 42);
+      pdf.rect(0, 0, pageWidth, 96, 'F');
+      pdf.setFont('helvetica', 'bold');
+      pdf.setTextColor(255, 255, 255);
+      pdf.setFontSize(22);
+      pdf.text('VENTARCH', margin, 43);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(9);
+      pdf.setTextColor(203, 213, 225);
+      pdf.text('PARTNER PORTAL', margin, 60);
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(16);
+      pdf.setTextColor(96, 165, 250);
+      pdf.text('QUOTATION', pageWidth - margin, 42, { align: 'right' });
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(9);
+      pdf.setTextColor(226, 232, 240);
+      pdf.text(`Quote #${currentInvoice.quoteId}`, pageWidth - margin, 60, { align: 'right' });
+
+      pdf.setTextColor(100, 116, 139);
+      pdf.setFontSize(8);
+      pdf.text('PREPARED FOR', margin, 124);
+      pdf.text('DATE', pageWidth - margin, 124, { align: 'right' });
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(11);
+      pdf.setTextColor(15, 23, 42);
+      pdf.text(String(currentInvoice.userName), margin, 143);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(9);
+      pdf.text(String(currentInvoice.userPhone), margin, 159);
+      pdf.text(currentInvoice.date.toLocaleDateString(), pageWidth - margin, 143, { align: 'right' });
+      pdf.setDrawColor(203, 213, 225);
+      pdf.line(margin, 178, pageWidth - margin, 178);
+
+      let y = drawTableHeader(196);
+      currentInvoice.items.forEach((item, index) => {
+        const cellLines = columns.map(column =>
+          pdf.splitTextToSize(String(column.value(item)), column.width - (column.label === 'PRODUCT' ? 42 : 14))
+        );
+        const lineCount = Math.max(...cellLines.map(lines => lines.length));
+        const rowHeight = Math.max(34, lineCount * 11 + 12);
+
+        if (y + rowHeight > pageHeight - margin - 70) {
+          pdf.addPage();
+          y = drawTableHeader(margin);
+        }
+
+        if (index % 2 === 0) {
+          pdf.setFillColor(241, 245, 249);
+          pdf.rect(margin, y, tableWidth, rowHeight, 'F');
+        }
+        pdf.setFont('helvetica', 'normal');
+        pdf.setFontSize(8.5);
+        pdf.setTextColor(30, 41, 59);
+        let x = margin;
+        columns.forEach((column, columnIndex) => {
+          const lines = cellLines[columnIndex];
+          const hasProductImage = columnIndex === 0 && images[index];
+          if (hasProductImage) {
+            pdf.addImage(images[index], 'PNG', x + 6, y + 5, 24, 24);
+          }
+          const textX = column.align === 'right'
+            ? x + column.width - 7
+            : x + (columnIndex === 0 ? 36 : 7);
+          pdf.text(lines, textX, y + 15, { align: column.align, lineHeightFactor: 1.25 });
+          x += column.width;
+        });
+        pdf.setDrawColor(226, 232, 240);
+        pdf.line(margin, y + rowHeight, margin + tableWidth, y + rowHeight);
+        y += rowHeight;
+      });
+
+      if (y + 48 > pageHeight - margin) {
+        pdf.addPage();
+        y = margin;
+      }
+      y += 18;
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(10);
+      pdf.setTextColor(30, 41, 59);
+      pdf.text('TOTAL ESTIMATED VALUE', pageWidth - margin - 155, y, { align: 'right' });
+      pdf.setFontSize(13);
+      pdf.setTextColor(37, 99, 235);
+      pdf.text(formatPDFAmount(currentInvoice.total), pageWidth - margin, y, { align: 'right' });
+
+      const pageCount = pdf.getNumberOfPages();
+      for (let pageNumber = 1; pageNumber <= pageCount; pageNumber += 1) {
+        pdf.setPage(pageNumber);
+        pdf.setFont('helvetica', 'normal');
+        pdf.setFontSize(8);
+        pdf.setTextColor(100, 116, 139);
+        pdf.text('VENTARCH Partner Portal', margin, pageHeight - 18);
+        pdf.text(`Page ${pageNumber} of ${pageCount}`, pageWidth - margin, pageHeight - 18, { align: 'right' });
+      }
+
+      pdf.save(`VENTARCH-Quotation-${currentInvoice.quoteId}.pdf`);
+      showToast('Quotation PDF downloaded.');
+    }
+
+    function showLoginError(msg) {
+      const errEl = $('login-error');
+      errEl.innerText = msg;
+      errEl.classList.remove('hidden');
+    }
+
+    function showMainApp() {
+      $('login-screen').classList.add('hidden'); $('main-app').classList.remove('hidden');
+      updateHeaderUI();
+    }
+
+    function updateHeaderUI() {
+      $('header-user-name').innerText = currentUser.name;
+      const qLeft = $('header-quotes-left');
+      qLeft.innerText = quotesRemaining;
+      qLeft.className = `font-bold ${quotesRemaining <= 2 ? 'text-red-400' : 'text-blue-400'}`;
+    }
+
+    function renderCategoryFilters() {
+      const host = $('category-filters');
+      const cats = ["All", ...[...new Set(PRODUCTS.map(p => p.category))]];
+      host.innerHTML = '';
+      cats.forEach(cat => {
+        const btn = document.createElement('button');
+        const active = cat === activeCategory;
+        btn.className = active
+          ? 'px-3 py-1.5 rounded-full text-xs font-medium bg-blue-600 text-white'
+          : 'px-3 py-1.5 rounded-full text-xs font-medium bg-slate-900 border border-slate-700 text-slate-300 hover:border-blue-500/50';
+        btn.textContent = cat;
+        btn.addEventListener('click', () => {
+          activeCategory = cat;
+          renderCategoryFilters();
+          renderProducts();
+        });
+        host.appendChild(btn);
+      });
+    }
+
+    function renderProducts() {
+      const grid = $('product-grid');
+      grid.innerHTML = '';
+      const list = activeCategory === "All" ? PRODUCTS : PRODUCTS.filter(p => p.category === activeCategory);
+
+      list.forEach(p => {
+        const hasPaint = p.paintOptions && p.paintOptions.length > 0;
+        const basePrice = getBasePrice(p.weightKg);
+
+        let paintSelectHtml = '';
+        if (hasPaint) {
+          const options = p.paintOptions.map((opt, idx) =>
+            `<option value="${idx}">${opt.name} ${opt.surchargePerKg > 0 ? `(+₹${opt.surchargePerKg}/kg)` : '(Base Rate)'}</option>`
+          ).join('');
+
+          paintSelectHtml = `
+            <div class="mb-4">
+              <label class="block text-xs font-medium text-slate-300 mb-1.5">Surface Finish</label>
+              <select id="paint-sel-${p.id}" class="w-full bg-slate-950 border border-slate-700 rounded px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-blue-500">
+                ${options}
+              </select>
+            </div>
+          `;
+        }
+
+        const imageHtml = p.image
+          ? `<img src="${encodeURI(p.image)}" alt="${p.name}" class="max-h-full max-w-full object-contain">`
+          : `<i data-lucide="package" class="w-10 h-10 text-slate-500"></i>`;
+
+        const card = document.createElement('div');
+        card.className = 'bg-slate-900 border border-slate-800 hover:border-blue-500/50 transition-colors rounded-lg p-5 flex flex-col h-full fade-in';
+        card.innerHTML = `
+          <div class="h-36 bg-white rounded flex items-center justify-center mb-4 border border-slate-700/50 overflow-hidden p-2">
+            ${imageHtml}
+          </div>
+          <div class="flex justify-between items-start mb-2">
+            <span class="text-xs font-mono text-blue-400 bg-blue-500/10 px-2 py-1 rounded">${p.category}</span>
+            <span class="text-xs font-mono text-slate-400">SKU: ${p.sku}</span>
+          </div>
+          <h3 class="text-lg font-semibold text-slate-100 mb-2">${p.name}</h3>
+          <p class="text-sm text-slate-400 mb-4 flex-grow">${p.description}</p>
+
+          <div class="bg-slate-950 p-3 rounded border border-slate-800 mb-4 text-xs font-mono space-y-1">
+            <div class="flex justify-between text-slate-400">
+              <span>Est. Weight:</span>
+              <span class="text-slate-200">${p.weightKg.toFixed(3)} kg</span>
+            </div>
+            <div class="flex justify-between text-slate-400">
+              <span>Base Material:</span>
+              <span class="text-slate-200">${formatINR(basePrice)}</span>
+            </div>
+          </div>
+
+          ${paintSelectHtml}
+
+          <div class="mt-auto pt-4 border-t border-slate-800 flex items-center justify-between">
+            <div>
+              <div class="text-[10px] uppercase tracking-wider text-slate-500">Unit Price</div>
+              <div class="font-mono font-bold text-lg text-blue-400" id="price-disp-${p.id}">${formatINR(basePrice)}</div>
+            </div>
+            <button id="add-btn-${p.id}" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded text-sm font-medium transition-colors">
+              Add
+            </button>
+          </div>
+        `;
+
+        grid.appendChild(card);
+
+        const updateDynamicPrice = () => {
+          let currentSurcharge = 0;
+          if (hasPaint) {
+            const selIdx = $(`paint-sel-${p.id}`).value;
+            currentSurcharge = getSurcharge(p.weightKg, p.paintOptions[selIdx].surchargePerKg);
+          }
+          $(`price-disp-${p.id}`).innerText = formatINR(basePrice + currentSurcharge);
+        };
+
+        if (hasPaint) {
+          $(`paint-sel-${p.id}`).addEventListener('change', updateDynamicPrice);
+        }
+
+        $(`add-btn-${p.id}`).addEventListener('click', () => {
+          let paintOption = null;
+          let surcharge = 0;
+
+          if (hasPaint) {
+            const selIdx = $(`paint-sel-${p.id}`).value;
+            paintOption = p.paintOptions[selIdx];
+            surcharge = getSurcharge(p.weightKg, paintOption.surchargePerKg);
+          }
+
+          addToCart(p, paintOption, basePrice, surcharge);
+        });
+      });
+      lucide.createIcons();
+    }
+
+    function addToCart(product, paintOption, basePrice, surcharge) {
+      const colorName = paintOption ? paintOption.name : null;
+      const existing = cart.find(item => item.productId === product.id && item.colorName === colorName);
+      if (existing) {
+        existing.qty += 1;
+      } else {
+        cart.push({
+          cartId: generateId(),
+          productId: product.id,
+          sku: product.sku,
+          name: product.name,
+          colorName: colorName,
+          basePrice: basePrice,
+          surcharge: surcharge,
+          qty: 1
+        });
+      }
+      updateCartUI();
+      showToast(`Added ${product.sku} to quote`);
+      if (cart.length === 1 && cart[0].qty === 1) openCart();
+    }
+
+    function updateCartItemQty(cartId, delta) {
+      const item = cart.find(i => i.cartId === cartId);
+      if (item) {
+        item.qty = Math.max(1, item.qty + delta);
+        updateCartUI();
+      }
+    }
+
+    function setCartItemQty(cartId, newQty) {
+      const item = cart.find(i => i.cartId === cartId);
+      if (item) {
+        const parsed = parseInt(newQty, 10);
+        if (!isNaN(parsed) && parsed > 0) {
+          item.qty = parsed;
+        } else {
+          item.qty = 1;
+        }
+        updateCartUI();
+      }
+    }
+
+    function removeCartItem(cartId) {
+      cart = cart.filter(i => i.cartId !== cartId);
+      updateCartUI();
+    }
+
+    function updateCartUI() {
+      const totalItems = cart.reduce((sum, item) => sum + item.qty, 0);
+      const badge = $('cart-badge');
+      if (totalItems > 0) {
+        badge.innerText = totalItems;
+        badge.classList.remove('hidden');
+      } else {
+        badge.classList.add('hidden');
+      }
+
+      const itemsContainer = $('cart-items');
+      const emptyContainer = $('cart-empty');
+      const footer = $('cart-footer');
+
+      if (cart.length === 0) {
+        itemsContainer.classList.add('hidden');
+        footer.classList.add('hidden');
+        emptyContainer.classList.remove('hidden');
+        return;
+      }
+
+      emptyContainer.classList.add('hidden');
+      itemsContainer.classList.remove('hidden');
+      footer.classList.remove('hidden');
+      itemsContainer.innerHTML = '';
+
+      cart.forEach(item => {
+        const row = document.createElement('div');
+        row.className = 'bg-slate-950 border border-slate-800 rounded p-3';
+        row.innerHTML = `
+          <div class="flex justify-between items-start mb-2">
+            <div>
+              <div class="text-sm font-medium text-slate-200">${item.name}</div>
+              <div class="text-[11px] font-mono text-slate-500 mt-1">
+                ${item.sku} ${item.colorName ? `• ${item.colorName}` : ''}
+              </div>
+            </div>
+            <button onclick="removeCartItem('${item.cartId}')" class="text-slate-500 hover:text-red-400">
+              <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+          </div>
+          <div class="flex items-center justify-between mt-4">
+            <div class="flex items-center border border-slate-700 rounded bg-slate-900 overflow-hidden">
+              <button onclick="updateCartItemQty('${item.cartId}', -1)" class="px-2 py-1 text-slate-400 hover:bg-slate-800 hover:text-white transition-colors">-</button>
+              <input type="number" min="1" value="${item.qty}" onchange="setCartItemQty('${item.cartId}', this.value)" class="w-10 bg-transparent text-center text-sm font-mono text-slate-200 focus:outline-none focus:bg-slate-800 py-1">
+              <button onclick="updateCartItemQty('${item.cartId}', 1)" class="px-2 py-1 text-slate-400 hover:bg-slate-800 hover:text-white transition-colors">+</button>
+            </div>
+            <div class="text-right">
+              <div class="font-mono text-xs italic text-slate-500">
+                Calculated upon generation
+              </div>
+            </div>
+          </div>
+        `;
+        itemsContainer.appendChild(row);
+      });
+
+      $('cart-subtotal').innerText = "TBD";
+      $('cart-surcharge').innerText = "TBD";
+      $('cart-total').innerText = "TBD";
+
+      const isLimitReached = quotesRemaining <= 0;
+      const statusText = $('cart-quotes-status');
+      statusText.innerText = `${quotesRemaining} / ${QUOTE_LIMIT}`;
+      statusText.className = `font-mono font-bold ${isLimitReached ? 'text-red-400' : 'text-blue-400'}`;
+
+      $('btn-generate-quote').disabled = isLimitReached;
+      $('quote-limit-warning').classList.toggle('hidden', !isLimitReached);
+
+      lucide.createIcons({ root: itemsContainer });
+    }
+
+    function openCart() {
+      $('cart-overlay').classList.remove('hidden'); $('cart-drawer').style.transform = 'translateX(0)';
+      void $('cart-overlay').offsetWidth;
+      $('cart-overlay').classList.remove('opacity-0');
+    }
+
+    function closeCart() {
+      $('cart-overlay').classList.add('opacity-0'); $('cart-drawer').style.transform = 'translateX(100%)';
+      setTimeout(() => {
+        $('cart-overlay').classList.add('hidden');
+      }, 300);
+    }
+
+    window.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+
+</html>

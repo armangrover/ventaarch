@@ -1,0 +1,13 @@
+{
+    "name": "ventarch-partner-portal",
+    "version": "1.0.0",
+    "private": true,
+    "description": "VENTARCH partner portal with SQLite persistence",
+    "engines": {
+        "node": ">=22.13.0"
+    },
+    "scripts": {
+        "start": "node server.js",
+        "test": "node --test"
+    }
+}
